@@ -131,7 +131,7 @@ class FinancialData(object):
             data = pd.DataFrame(data=[data], columns=column_list, index=[pd_index])
             return data
 
-    # -----------ANNUAL DATA-----------------------------------------------------
+    # -----------QUARTER DATA-----------------------------------------------------
 
     def quarter_revenue(self, as_list=False, plot=False, as_DataFrame=True):
         r_name = "quarter_revenue"
