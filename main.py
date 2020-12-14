@@ -245,6 +245,75 @@ class FinancialData(object):
             data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
             return data
 
+
+    def make_predictions(self, input_list, num_terms_pred, plot=False, as_list=False, asDataFrame=True,
+                         only_prediction_list=False):
+
+        name = self.r_name
+
+        pd_index = naming_function(name_=name)
+        lm = LinearRegression()
+        index_input_list = np.arange(len(input_list))
+
+        input_list = np.array(input_list).reshape(-1, 1)
+
+        index_input_list = np.array(index_input_list).reshape(-1, 1)
+
+        lm.fit(X=index_input_list, y=input_list)
+
+        predict_me = np.arange(len(input_list), len(input_list) + num_terms_pred)
+
+        predict_me = predict_me.reshape(-1, 1)
+        predictions = lm.predict(predict_me)
+        predictions = clean_ser(predictions)
+
+        index_input_list = clean_ser(index_input_list)
+        input_list = clean_ser(input_list)
+
+        predict_label = np.arange(len(input_list), len(input_list) + num_terms_pred)
+        predict_label = clean_ser(predict_label)
+
+        cont_predictions = predictions
+
+        predict_label.append(index_input_list[-1])
+        cont_predictions.append(input_list[-1])
+
+        scrap = int(self.column_list[-1][-2:]) + 1
+        for i in range(num_terms_pred):
+            self.column_list.append("March 20{} E".format(scrap + i))
+
+        if plot:
+            plt.figure(figsize=(15, 8))
+            sns.set_theme()
+            sns.lineplot(x=index_input_list, y=input_list, color='red', linewidth=2, marker="o")
+            sns.lineplot(x=predict_label, y=cont_predictions, color='green', linewidth=3, marker="o")
+            plt.xticks(ticks=range(0, len(self.column_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            plt.xlabel('Results declared in', fontsize=14)
+            sns.set(style='dark')
+
+            if self.percentage:
+                plt.ylabel('In %', fontsize=14)
+
+            else:
+                plt.ylabel('INR in crores', fontsize=14)
+
+            plt.title("{}".format(pd_index), fontsize=18)
+            plt.legend(labels=['Declared', 'Expected'])
+            plt.tight_layout()
+            plt.show()
+
+        if as_list:
+            return input_list + predictions[:-1]
+
+        if asDataFrame:
+            data = pd.DataFrame(data=[input_list + predictions[:-1]], columns=self.column_list, index=[self.pd_index])
+            return data
+
+        if only_prediction_list:
+            return predictions[:-1]
+
+    # Get functions
+
     # -----------QUARTER DATA-----------------------------------------------------
 
     def quarter_revenue(self, as_list=False, plot=False, as_DataFrame=True):
@@ -315,73 +384,7 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
-    def make_predictions(self, input_list, num_terms_pred, plot=False, as_list=False, asDataFrame=True,
-                         only_prediction_list=False):
-
-        name = self.r_name
-
-        pd_index = naming_function(name_=name)
-        lm = LinearRegression()
-        index_input_list = np.arange(len(input_list))
-
-        input_list = np.array(input_list).reshape(-1, 1)
-
-        index_input_list = np.array(index_input_list).reshape(-1, 1)
-
-        lm.fit(X=index_input_list, y=input_list)
-
-        predict_me = np.arange(len(input_list), len(input_list) + num_terms_pred)
-
-        predict_me = predict_me.reshape(-1, 1)
-        predictions = lm.predict(predict_me)
-        predictions = clean_ser(predictions)
-
-        index_input_list = clean_ser(index_input_list)
-        input_list = clean_ser(input_list)
-
-        predict_label = np.arange(len(input_list), len(input_list) + num_terms_pred)
-        predict_label = clean_ser(predict_label)
-
-        cont_predictions = predictions
-
-        predict_label.append(index_input_list[-1])
-        cont_predictions.append(input_list[-1])
-
-        scrap = int(self.column_list[-1][-2:]) + 1
-        for i in range(num_terms_pred):
-            self.column_list.append("March 20{} E".format(scrap + i))
-
-        if plot:
-            plt.figure(figsize=(15, 8))
-            sns.set_theme()
-            sns.lineplot(x=index_input_list, y=input_list, color='red', linewidth=2, marker="o")
-            sns.lineplot(x=predict_label, y=cont_predictions, color='green', linewidth=3, marker="o")
-            plt.xticks(ticks=range(0, len(self.column_list)), labels=self.column_list, rotation='vertical', fontsize=8)
-            plt.xlabel('Results declared in', fontsize=14)
-            sns.set(style='dark')
-
-            if self.percentage:
-                plt.ylabel('In %', fontsize=14)
-
-            else:
-                plt.ylabel('INR in crores', fontsize=14)
-
-            plt.title("{}".format(pd_index), fontsize=18)
-            plt.legend(labels=['Declared', 'Expected'])
-            plt.tight_layout()
-            plt.show()
-
-        if as_list:
-            return input_list + predictions[:-1]
-
-        if asDataFrame:
-            data = pd.DataFrame(data=[input_list + predictions[:-1]], columns=self.column_list, index=[self.pd_index])
-            return data
-
-        if only_prediction_list:
-            return predictions[:-1]
-
-    # Get functions
+    # ------------Balance Sheet Items--------------------------------
 
     def share_capital(self, as_list=False, plot=False, as_DataFrame=True):
         self.r_name = "share_capital"
@@ -436,6 +439,8 @@ class FinancialData(object):
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
+
+    # ------------Cash Flow Items ------------------------------------
 
     def cash_from_operating_activity(self, as_list=False, plot=False, as_DataFrame=True):
         self.r_name = "cash_flow_operating_activities"
