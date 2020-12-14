@@ -75,7 +75,7 @@ def naming_function(name_):
     elif name_ == "net_cash_flow":
         return "Net Cash Flow"
     elif name_ == "roce":
-        return "ROCE"
+        return "ROCE (%)"
     else:
         return "Something Broke"
 
@@ -130,7 +130,6 @@ class FinancialData(object):
             table_index = 8
             data = pd.DataFrame(self.df[table_index])
             data.dropna(axis=1, inplace=True)
-
 
         data.dropna(axis=0, inplace=True)
 
@@ -222,18 +221,22 @@ class FinancialData(object):
                 index_list.append(i)
 
             plt.figure(figsize=(15, 8))
-            sns.lineplot(x=index_list, y=data)
-            plt.xticks(ticks=range(0, len(index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            sns.set_style("darkgrid")
+            sns.lineplot(x=index_list, y=data, linewidth=2, marker="o")
             plt.xlabel('Results declared in', fontsize=14)
+            plt.xticks(ticks=range(0, len(index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            sns.set(style='dark')
+
             if self.percentage:
                 plt.ylabel('In %', fontsize=14)
-                plt.title("{}".format(self.pd_index), fontsize=18)
-                plt.show()
-
             else:
                 plt.ylabel('INR in crores', fontsize=14)
-                plt.title("{}".format(self.pd_index), fontsize=18)
-                plt.show()
+
+            plt.title("{}".format(self.pd_index), fontsize=18)
+            plt.legend(labels=['Declared'])
+            plt.tight_layout()
+            plt.plot(marker="o")
+            plt.show()
 
         if as_list:
             return data
@@ -350,21 +353,23 @@ class FinancialData(object):
 
         if plot:
             plt.figure(figsize=(15, 8))
-            sns.lineplot(x=index_input_list, y=input_list, color='red')
-            sns.lineplot(x=predict_label, y=cont_predictions, color='green', linewidth=2)
+            sns.set_theme()
+            sns.lineplot(x=index_input_list, y=input_list, color='red', linewidth=2, marker="o")
+            sns.lineplot(x=predict_label, y=cont_predictions, color='green', linewidth=3, marker="o")
             plt.xticks(ticks=range(0, len(self.column_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            plt.xlabel('Results declared in', fontsize=14)
+            sns.set(style='dark')
 
             if self.percentage:
-                plt.xlabel('Results declared in', fontsize=14)
                 plt.ylabel('In %', fontsize=14)
-                plt.title("{}".format(pd_index), fontsize=18)
-                plt.show()
 
             else:
                 plt.ylabel('INR in crores', fontsize=14)
-                plt.xlabel('Results declared in', fontsize=14)
-                plt.title("{}".format(pd_index), fontsize=18)
-                plt.show()
+
+            plt.title("{}".format(pd_index), fontsize=18)
+            plt.legend(labels=['Declared', 'Expected'])
+            plt.tight_layout()
+            plt.show()
 
         if as_list:
             return input_list + predictions[:-1]
@@ -376,9 +381,7 @@ class FinancialData(object):
         if only_prediction_list:
             return predictions[:-1]
 
-    #  TO Do
-    # create functions for balance sheet items
-    # same like p&l items
+    # Get functions
 
     def share_capital(self, as_list=False, plot=False, as_DataFrame=True):
         self.r_name = "share_capital"
@@ -464,6 +467,7 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
+
 if __name__ == '__main__':
     t = FinancialData("POLYCAB")
-    print(t.make_predictions(t.roce(as_list=True), plot=True, num_terms_pred=5))
+    t.make_predictions(t.annual_net_profit(as_list=True), 3, plot=True)
