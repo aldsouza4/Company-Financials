@@ -21,6 +21,7 @@ def clean_values(num):
     else:
         return float(num)
 
+
 def naming_function(name_):
     if name_ == "quarter_revenue":
         return "Quarter Revenue"
@@ -45,16 +46,39 @@ def naming_function(name_):
         return "Annual Net Profit"
     elif name_ == "annual_eps":
         return "Annual EPS"
+    elif name_ == "share_capital":
+        return "Share Capital"
+    elif name_ == "reserves":
+        return "Reserves"
+    elif name_ == "borrowings":
+        return "Borrowing"
+    elif name_ == "other_liabilities":
+        return "Other Liabilities"
+    elif name_ == "total_liabilities":
+        return "Total Liabilities"
+    elif name_ == "fixed_assets":
+        return "Fixed Assets"
+    elif name_ == "capital_work":
+        return "CWIP"
+    elif name_ == "investments":
+        return "Investments"
+    elif name_ == "other_assets":
+        return "Other Assets"
+    elif name_ == "total_assets":
+        return "Total Assets"
     else:
         return "Something Broke"
+
 
 def clean_ser(val):
     return (np.around((val.reshape(-1)), 2)).tolist()
 
+
 class FinancialData(object):
 
-    def __init__(self):
-        self.df = pd.read_html("https://www.screener.in/company/STLTECH/consolidated/")
+    def __init__(self, ticker):
+        self.ticker = ticker
+        self.df = pd.read_html("https://www.screener.in/company/{}/consolidated/".format(self.ticker))
 
     def financial_results(self, name, display=False):
 
@@ -69,13 +93,23 @@ class FinancialData(object):
             data = pd.DataFrame(self.df[table_index])
             data.drop("TTM", axis=True, inplace=True)
 
+        elif name == "balance":
+            table_index = 6
+            data = pd.DataFrame(self.df[table_index])
+            data.dropna(axis=0, inplace=True)
+            self.column_list = data.columns
+            self.column_list = self.column_list[1:]
+            self.column_list = self.column_list.tolist()
+            if display:
+                return data.to_string()
+            else:
+                return data
 
         data.dropna(axis=0, inplace=True)
 
         self.column_list = data.columns
         self.column_list = self.column_list[1:]
         self.column_list = self.column_list.tolist()
-
 
         for i in self.column_list:
             data[i] = data[i].apply(clean_values)
@@ -114,19 +148,40 @@ class FinancialData(object):
             row_index = 9
         elif name == "annual_eps":
             row_index = 10
+        #
+        elif name == "share_capital":
+            row_index = 0
+        elif name == "reserves":
+            row_index = 1
+        elif name == "borrowings":
+            row_index = 2
+        elif name == "other_liabilities":
+            row_index = 3
+        elif name == "total_liabilities":
+            row_index = 4
+        elif name == "fixed_assets":
+            row_index = 5
+        #
+        elif name == "capital_work":
+            row_index = 6
+        elif name == "investments":
+            row_index = 7
+        elif name == "other_assets":
+            row_index = 8
+        elif name == "total_assets":
+            row_index = 9
+        #
         else:
             return "Something Broke"
 
         data = list(data.iloc[row_index])
         data = data[1:]
+        self.pd_index = naming_function(name_=name)
 
         if plot_inner:
             index_list = []
             for i in range(len(data)):
                 index_list.append(i)
-
-            pd_index = naming_function(name_=name)
-
 
             plt.figure(figsize=(15, 8))
             sns.lineplot(x=index_list, y=data)
@@ -134,21 +189,19 @@ class FinancialData(object):
             plt.xlabel('Results declared in', fontsize=14)
             if self.percentage:
                 plt.ylabel('In %', fontsize=14)
-                plt.title("{}".format(pd_index), fontsize=18)
+                plt.title("{}".format(self.pd_index), fontsize=18)
                 plt.show()
 
             else:
                 plt.ylabel('INR in crores', fontsize=14)
-                plt.title("{}".format(pd_index), fontsize=18)
+                plt.title("{}".format(self.pd_index), fontsize=18)
                 plt.show()
 
         if as_list:
             return data
 
         if asDataFrame:
-            pd_index = naming_function(name_=name)
-
-            data = pd.DataFrame(data=[data], columns=self.column_list, index=[pd_index])
+            data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
             return data
 
     # -----------QUARTER DATA-----------------------------------------------------
@@ -221,9 +274,10 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
-    def make_predictions(self, input_list, num_terms_pred):
+    def make_predictions(self, input_list, num_terms_pred, plot=False, as_list=False, asDataFrame=True,
+                         only_prediction_list=False):
 
-        name=self.r_name
+        name = self.r_name
 
         pd_index = naming_function(name_=name)
         lm = LinearRegression()
@@ -259,24 +313,95 @@ class FinancialData(object):
         for i in range(num_terms_pred):
             self.column_list.append("March 20{} E".format(scrap + i))
 
-        plt.figure(figsize=(15, 8))
-        sns.lineplot(x=index_input_list, y=input_list, color='red')
-        sns.lineplot(x=predict_label, y=cont_predictions, color='green', linewidth=2)
-        plt.xticks(ticks=range(0, len(self.column_list)), labels=self.column_list, rotation='vertical', fontsize=8)
-        plt.xlabel('Results declared in', fontsize=14)
-        if self.percentage:
-            plt.ylabel('In %', fontsize=14)
-            plt.title("{}".format(pd_index), fontsize=18)
-            plt.show()
+        # new_list = input_list + predictions
 
-        else:
-            plt.ylabel('INR in crores', fontsize=14)
-            plt.title("{}".format(pd_index), fontsize=18)
-            plt.show()
+        if plot:
+            plt.figure(figsize=(15, 8))
+            sns.lineplot(x=index_input_list, y=input_list, color='red')
+            sns.lineplot(x=predict_label, y=cont_predictions, color='green', linewidth=2)
+            plt.xticks(ticks=range(0, len(self.column_list)), labels=self.column_list, rotation='vertical', fontsize=8)
 
-        return input_list + predictions
+            if self.percentage:
+                plt.xlabel('Results declared in', fontsize=14)
+                plt.ylabel('In %', fontsize=14)
+                plt.title("{}".format(pd_index), fontsize=18)
+                plt.show()
+
+            else:
+                plt.xlabel('Results declared in', fontsize=14)
+                plt.ylabel('INR in crores', fontsize=14)
+                plt.title("{}".format(pd_index), fontsize=18)
+                plt.show()
+
+        if as_list:
+            return input_list + predictions[:-1]
+
+        if asDataFrame:
+            data = pd.DataFrame(data=[input_list + predictions[:-1]], columns=self.column_list, index=[self.pd_index])
+            return data
+
+        if only_prediction_list:
+            return predictions[:-1]
+
+    #  TO Do
+    # create functions for balance sheet items
+    # same like p&l items
+
+    def share_capital(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "share_capital"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def reserves(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "reserves"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def borrowings(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "borrowings"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def other_liabilities(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "other_liabilities"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def total_liabilities(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "total_liabilities"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def fixed_assets(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "fixed_assets"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def capital_work(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "capital_work"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def other_assets(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "other_assets"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def total_assets(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "total_assets"
+        t_name = "balance"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
 
 
-t = FinancialData()
-print(t.make_predictions(t.annual_net_profit(as_list=True), 10))
+t = FinancialData("POLYCAB")
 
+t.make_predictions(t.total_assets(as_list=True),3, plot=True)
