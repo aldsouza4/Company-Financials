@@ -66,6 +66,16 @@ def naming_function(name_):
         return "Other Assets"
     elif name_ == "total_assets":
         return "Total Assets"
+    elif name_ == "cash_flow_operating_activities":
+        return "Cash from Operating Activities"
+    elif name_ == "cash_flow_investing_activities":
+        return "Cash from Investing Activities"
+    elif name_ == "cash_flow_financing_activities":
+        return "Cash from Financing Activities"
+    elif name_ == "net_cash_flow":
+        return "Net Cash Flow"
+    elif name_ == "roce":
+        return "ROCE"
     else:
         return "Something Broke"
 
@@ -104,6 +114,23 @@ class FinancialData(object):
                 return data.to_string()
             else:
                 return data
+        elif name == "cash_flow":
+            table_index = 7
+            data = pd.DataFrame(self.df[table_index])
+            data.dropna(axis=0, inplace=True)
+            self.column_list = data.columns
+            self.column_list = self.column_list[1:]
+            self.column_list = self.column_list.tolist()
+            if display:
+                return data.to_string()
+            else:
+                return data
+
+        elif name == "ROCE":
+            table_index = 8
+            data = pd.DataFrame(self.df[table_index])
+            data.dropna(axis=1, inplace=True)
+
 
         data.dropna(axis=0, inplace=True)
 
@@ -148,7 +175,7 @@ class FinancialData(object):
             row_index = 9
         elif name == "annual_eps":
             row_index = 10
-        #
+
         elif name == "share_capital":
             row_index = 0
         elif name == "reserves":
@@ -161,7 +188,7 @@ class FinancialData(object):
             row_index = 4
         elif name == "fixed_assets":
             row_index = 5
-        #
+
         elif name == "capital_work":
             row_index = 6
         elif name == "investments":
@@ -170,7 +197,18 @@ class FinancialData(object):
             row_index = 8
         elif name == "total_assets":
             row_index = 9
-        #
+
+        elif name == "cash_flow_operating_activities":
+            row_index = 0
+        elif name == "cash_flow_investing_activities":
+            row_index = 1
+        elif name == "cash_flow_financing_activities":
+            row_index = 2
+        elif name == "net_cash_flow":
+            row_index = 3
+        elif name == "roce":
+            row_index = 0
+            self.percentage = True
         else:
             return "Something Broke"
 
@@ -294,7 +332,6 @@ class FinancialData(object):
         predict_me = predict_me.reshape(-1, 1)
         predictions = lm.predict(predict_me)
         predictions = clean_ser(predictions)
-        predict_me = clean_ser(predict_me)
 
         index_input_list = clean_ser(index_input_list)
         input_list = clean_ser(input_list)
@@ -307,13 +344,9 @@ class FinancialData(object):
         predict_label.append(index_input_list[-1])
         cont_predictions.append(input_list[-1])
 
-        # return predictions
-
         scrap = int(self.column_list[-1][-2:]) + 1
         for i in range(num_terms_pred):
             self.column_list.append("March 20{} E".format(scrap + i))
-
-        # new_list = input_list + predictions
 
         if plot:
             plt.figure(figsize=(15, 8))
@@ -328,8 +361,8 @@ class FinancialData(object):
                 plt.show()
 
             else:
-                plt.xlabel('Results declared in', fontsize=14)
                 plt.ylabel('INR in crores', fontsize=14)
+                plt.xlabel('Results declared in', fontsize=14)
                 plt.title("{}".format(pd_index), fontsize=18)
                 plt.show()
 
@@ -401,7 +434,36 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
+    def cash_from_operating_activity(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "cash_flow_operating_activities"
+        t_name = "cash_flow"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
 
-t = FinancialData("POLYCAB")
+    def cash_flow_investing_activities(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "cash_flow_investing_activities"
+        t_name = "cash_flow"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
 
-t.make_predictions(t.total_assets(as_list=True),3, plot=True)
+    def cash_from_financing_activity(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "cash_flow_financing_activities"
+        t_name = "cash_flow"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def net_cash_flow(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "net_cash_flow"
+        t_name = "cash_flow"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+    def roce(self, as_list=False, plot=False, as_DataFrame=True):
+        self.r_name = "roce"
+        t_name = "ROCE"
+        return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
+                                  asDataFrame=as_DataFrame)
+
+if __name__ == '__main__':
+    t = FinancialData("POLYCAB")
+    print(t.make_predictions(t.roce(as_list=True), plot=True, num_terms_pred=5))
