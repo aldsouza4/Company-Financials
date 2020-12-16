@@ -248,7 +248,7 @@ class FinancialData(object):
             data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
             return data
 
-    def make_predictions(self, input_list, num_terms_pred, plot=False, as_list=False, asDataFrame=True,
+    def make_predictions(self, input_list, num_terms_pred=3, plot=False, as_list=False, asDataFrame=True,
                          only_prediction_list=False):
 
         name = self.r_name
@@ -476,7 +476,9 @@ class FinancialData(object):
 
     def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
         self.pd_index = naming_function(self.r_name)
+
         if as_list:
+            data = [round(num, 2) for num in data]
             return data
         elif average:
             return clean_ser(mean(data))[0]
@@ -517,10 +519,10 @@ class FinancialData(object):
         nim = [element * 100 for element in nim]
         self.percentage = True
         self.r_name = 'net_income_margins'
-        return self.disp_data(data=nim, plot=plot, as_DataFrame=as_DataFrame, average = average)
+        return self.disp_data(data=nim, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
 
 
 if __name__ == '__main__':
 
     t = FinancialData("STLTECH")
-    print(t.net_income_margins(average=True))
+    t.make_predictions(t.net_income_margins(as_list=True), plot=True )
