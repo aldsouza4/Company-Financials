@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import numpy as np
+from statistics import mean
 
 
 def clean_values(num):
@@ -76,6 +77,8 @@ def naming_function(name_):
         return "Net Cash Flow"
     elif name_ == "roce":
         return "ROCE (%)"
+    elif name_ == "net_income_margins":
+        return "Net Income Margins (%)"
     else:
         return "Something Broke"
 
@@ -216,15 +219,15 @@ class FinancialData(object):
         self.pd_index = naming_function(name_=name)
 
         if plot_inner:
-            index_list = []
+            self.index_list = []
             for i in range(len(data)):
-                index_list.append(i)
+                self.index_list.append(i)
 
             plt.figure(figsize=(15, 8))
             sns.set_style("darkgrid")
-            sns.lineplot(x=index_list, y=data, linewidth=2, marker="o")
+            sns.lineplot(x=self.index_list, y=data, linewidth=2, marker="o")
             plt.xlabel('Results declared in', fontsize=14)
-            plt.xticks(ticks=range(0, len(index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            plt.xticks(ticks=range(0, len(self.index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
             sns.set(style='dark')
 
             if self.percentage:
@@ -244,7 +247,6 @@ class FinancialData(object):
         if asDataFrame:
             data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
             return data
-
 
     def make_predictions(self, input_list, num_terms_pred, plot=False, as_list=False, asDataFrame=True,
                          only_prediction_list=False):
@@ -472,7 +474,53 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
+    def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
+        self.pd_index = naming_function(self.r_name)
+        if as_list:
+            return data
+        elif average:
+            return clean_ser(mean(data))[0]
+        elif plot:
+            self.index_list = []
+            for i in range(len(data)):
+                self.index_list.append(i)
+
+            plt.figure(figsize=(15, 8))
+            sns.set_style("darkgrid")
+            sns.lineplot(x=self.index_list, y=data, linewidth=2, marker="o")
+            plt.xlabel('Results declared in', fontsize=14)
+            plt.xticks(ticks=range(0, len(self.index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            sns.set(style='dark')
+
+            if self.percentage:
+                plt.ylabel('In %', fontsize=14)
+            else:
+                plt.ylabel('INR in crores', fontsize=14)
+
+            plt.title("{}".format(self.pd_index), fontsize=18)
+            plt.legend(labels=['Declared'])
+            plt.tight_layout()
+            plt.plot(marker="o")
+            plt.show()
+
+        elif as_DataFrame:
+            data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
+            return data
+
+        elif average:
+            return mean(data)
+
+    def net_income_margins(self, as_list=False, plot=False, as_DataFrame=True, average = False):
+        net_income = self.annual_net_profit(as_list=True)
+        revenue = self.annual_revenue(as_list=True)
+        nim = [x / y for x, y in zip(net_income, revenue)]
+        nim = [element * 100 for element in nim]
+        self.percentage = True
+        self.r_name = 'net_income_margins'
+        return self.disp_data(data=nim, plot=plot, as_DataFrame=as_DataFrame, average = average)
+
 
 if __name__ == '__main__':
-    t = FinancialData("POLYCAB")
-    t.make_predictions(t.annual_net_profit(as_list=True), 3, plot=True)
+
+    t = FinancialData("STLTECH")
+    print(t.net_income_margins(average=True))
