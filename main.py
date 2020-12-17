@@ -90,7 +90,7 @@ def clean_ser(val):
 class FinancialData(object):
 
     def __init__(self, ticker):
-        self.ticker = ticker
+        self.ticker = ticker.upper()
         self.df = pd.read_html("https://www.screener.in/company/{}/consolidated/".format(self.ticker))
 
     def financial_results(self, name, display=False):
@@ -314,7 +314,45 @@ class FinancialData(object):
         if only_prediction_list:
             return predictions[:-1]
 
-    # Get functions
+    def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
+        self.pd_index = naming_function(self.r_name)
+
+        if as_list:
+            data = [round(num, 2) for num in data]
+            return data
+        elif average:
+            return clean_ser(mean(data))[0]
+        elif plot:
+            self.index_list = []
+            for i in range(len(data)):
+                self.index_list.append(i)
+
+            plt.figure(figsize=(15, 8))
+            sns.set_style("darkgrid")
+            sns.lineplot(x=self.index_list, y=data, linewidth=2, marker="o")
+            plt.xlabel('Results declared in', fontsize=14)
+            plt.xticks(ticks=range(0, len(self.index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
+            sns.set(style='dark')
+
+            if self.percentage:
+                plt.ylabel('In %', fontsize=14)
+            else:
+                plt.ylabel('INR in crores', fontsize=14)
+
+            plt.title("{}".format(self.pd_index), fontsize=18)
+            plt.legend(labels=['Declared'])
+            plt.tight_layout()
+            plt.plot(marker="o")
+            plt.show()
+
+        elif as_DataFrame:
+            data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
+            return data
+
+        elif average:
+            return mean(data)
+
+
 
     # -----------QUARTER DATA-----------------------------------------------------
 
@@ -474,43 +512,6 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
-    def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
-        self.pd_index = naming_function(self.r_name)
-
-        if as_list:
-            data = [round(num, 2) for num in data]
-            return data
-        elif average:
-            return clean_ser(mean(data))[0]
-        elif plot:
-            self.index_list = []
-            for i in range(len(data)):
-                self.index_list.append(i)
-
-            plt.figure(figsize=(15, 8))
-            sns.set_style("darkgrid")
-            sns.lineplot(x=self.index_list, y=data, linewidth=2, marker="o")
-            plt.xlabel('Results declared in', fontsize=14)
-            plt.xticks(ticks=range(0, len(self.index_list)), labels=self.column_list, rotation='vertical', fontsize=8)
-            sns.set(style='dark')
-
-            if self.percentage:
-                plt.ylabel('In %', fontsize=14)
-            else:
-                plt.ylabel('INR in crores', fontsize=14)
-
-            plt.title("{}".format(self.pd_index), fontsize=18)
-            plt.legend(labels=['Declared'])
-            plt.tight_layout()
-            plt.plot(marker="o")
-            plt.show()
-
-        elif as_DataFrame:
-            data = pd.DataFrame(data=[data], columns=self.column_list, index=[self.pd_index])
-            return data
-
-        elif average:
-            return mean(data)
 
     def net_income_margins(self, as_list=False, plot=False, as_DataFrame=True, average = False):
         net_income = self.annual_net_profit(as_list=True)
@@ -519,10 +520,26 @@ class FinancialData(object):
         nim = [element * 100 for element in nim]
         self.percentage = True
         self.r_name = 'net_income_margins'
+
         return self.disp_data(data=nim, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
+
+    def shares_outstanding(self):
+        data = pd.read_html("https://in.finance.yahoo.com/quote/{0}.NS/key-statistics?p={0}.NS&.tsrc=fin-srch"
+                            .format(self.ticker))
+        raw_shares = data[2].iloc[2][1]
+
+        if raw_shares[-1] == "B":
+            self.shares = float(raw_shares[:-1]) * 1000000000
+        elif raw_shares[-1] == "M":
+            self.shares = float(raw_shares[:-1]) * 1000000
+        else:
+            self.shares = float(raw_shares) * 1000
+
+        return self.shares
+
 
 
 if __name__ == '__main__':
 
-    t = FinancialData("STLTECH")
-    t.make_predictions(t.net_income_margins(as_list=True), plot=True )
+    t = FinancialData("polYCab")
+    print(t.shares_outstanding())
