@@ -79,6 +79,12 @@ def naming_function(name_):
         return "ROCE (%)"
     elif name_ == "net_income_margins":
         return "Net Income Margins (%)"
+    elif name_ == "operating_to_net_income":
+        return "Operating to Net_income (%)"
+    elif name_ == "free_cash_flow":
+        return "Free Cash Flow"
+    elif name_ == "freecash_to_net_income":
+        return "Free Cash Flow to Net Income"
     else:
         return "Something Broke"
 
@@ -352,8 +358,6 @@ class FinancialData(object):
         elif average:
             return mean(data)
 
-
-
     # -----------QUARTER DATA-----------------------------------------------------
 
     def quarter_revenue(self, as_list=False, plot=False, as_DataFrame=True):
@@ -512,16 +516,42 @@ class FinancialData(object):
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
+    def free_cash_flow(self, as_list=False, plot=False, as_DataFrame=True):
 
-    def net_income_margins(self, as_list=False, plot=False, as_DataFrame=True, average = False):
+        fcf = [x + y for x, y in zip(self.cash_from_operating_activity(as_list=True),
+                                      self.cash_flow_investing_activities(as_list=True))]
+        self.r_name = "free_cash_flow"
+        return self.disp_data(data=fcf, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=False)
+
+    def net_income_margins(self, as_list=False, plot=False, as_DataFrame=True, average=False):
         net_income = self.annual_net_profit(as_list=True)
         revenue = self.annual_revenue(as_list=True)
         nim = [x / y for x, y in zip(net_income, revenue)]
         nim = [element * 100 for element in nim]
         self.percentage = True
         self.r_name = 'net_income_margins'
-
         return self.disp_data(data=nim, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
+
+    def operating_to_net_income(self, as_list=False, plot=False, as_DataFrame=True, average=False):
+        net_income = self.annual_net_profit(as_list=True)
+        operating_income = self.cash_from_operating_activity(as_list=True)
+        ratio_list = [y/x for x, y in zip(net_income, operating_income)]
+        ratio_list = [element * 100 for element in ratio_list]
+        self.percentage = True
+        self.r_name = 'operating_to_net_income'
+        return self.disp_data(data=ratio_list, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
+
+    def free_cash_to_net_income(self, as_list=False, plot=False, as_DataFrame=True, average=False):
+        net_income = self.annual_net_profit(as_list=True)
+        free_cash_flow = self.free_cash_flow(as_list=True)
+        ratio_list = [y/x for x, y in zip(net_income, free_cash_flow)]
+        ratio_list = [element * 100 for element in ratio_list]
+        self.percentage = True
+        self.r_name = 'freecash_to_net_income'
+        return self.disp_data(data=ratio_list, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
+
+
+
 
     def shares_outstanding(self):
         data = pd.read_html("https://in.finance.yahoo.com/quote/{0}.NS/key-statistics?p={0}.NS&.tsrc=fin-srch"
@@ -537,42 +567,63 @@ class FinancialData(object):
 
         return self.shares
 
-    def discounted_cash_flow(self):
+    def discounted_cash_flow(self, use):
         # using *net profit* to calculate
-        rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=4,  as_list=True)
-        nim_avg = self.net_income_margins(average=True)/100
+        rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=4, as_list=True)
+        nim_avg = self.net_income_margins(average=True) / 100
         net_income_predict = []
         for i in range(1, 5):
             temp = (rev_predict[-i] * nim_avg)
             net_income_predict.append(temp)
-
         net_income_predict = [round(num, 2) for num in net_income_predict]
         net_income_predict.reverse()
+        income_predict=[]
+        if use == "net income":
+            income_predict = net_income_predict
+        elif use == "operating cash":
+            operating_cash_predict =[]
+            opm_to_nim_avg = self.operating_to_net_income(average=True)
+            for i in range(1, 5):
+                temp = (net_income_predict[-i] * opm_to_nim_avg)
+                income_predict.append(temp)
+                income_predict = [round(num, 2) for num in income_predict]
+                income_predict.reverse()
+        elif use == "free cash":
+            free_cash_predict =[]
+            fcf_to_nim_avg = self.free_cash_to_net_income(average=True)
+            for i in range(1, 5):
+                temp = (net_income_predict[-i] * fcf_to_nim_avg)
+                income_predict.append(temp)
+                income_predict = [round(num, 2) for num in income_predict]
+                income_predict.reverse()
+
 
         required_rate_of_return = 0.12
         discount_rate = required_rate_of_return
         perpetual_growth_rate = 0.04
         shares_outstanding = self.shares_outstanding()
 
-        terminal_value = (net_income_predict[-1] * (1+perpetual_growth_rate))/(required_rate_of_return-perpetual_growth_rate)
+        terminal_value = (income_predict[-1] * (1 + perpetual_growth_rate)) / (
+                    required_rate_of_return - perpetual_growth_rate)
 
-#       Applying Discount Factor
+        #       Applying Discount Factor
+
         discount_factor_list = []
         for i in range(1, 5):
-            discount_factor_list.append((1+discount_rate)**i)
+            discount_factor_list.append((1 + discount_rate) ** i)
 
-        present_value_future_cashflow = []
-
-        present_value_future_cashflow = [x / y for x, y in zip(net_income_predict, discount_factor_list)]
+        present_value_future_cashflow = [x / y for x, y in zip(income_predict, discount_factor_list)]
         present_value_future_cashflow.append(terminal_value)
         todays_value_futurecash = sum(present_value_future_cashflow)
 
-        value_of_share = (todays_value_futurecash)/(shares_outstanding/10000000)
-        value_of_share = round(value_of_share,3)
+        value_of_share = (todays_value_futurecash) / (shares_outstanding / 10000000)
+        value_of_share = round(value_of_share, 3)
 
         print(value_of_share)
 
-if __name__ == '__main__':
 
-    t = FinancialData("LT")
-    t.discounted_cash_flow()
+if __name__ == '__main__':
+    t = FinancialData("STLTECH")
+    # t.discounted_cash_flow(use="operating cash")
+    # t.discounted_cash_flow(use="free cash")
+    print(t.free_cash_to_net_income(average=True))
