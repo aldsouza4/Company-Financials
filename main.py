@@ -537,9 +537,42 @@ class FinancialData(object):
 
         return self.shares
 
+    def discounted_cash_flow(self):
+        # using *net profit* to calculate
+        rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=4,  as_list=True)
+        nim_avg = self.net_income_margins(average=True)/100
+        net_income_predict = []
+        for i in range(1, 5):
+            temp = (rev_predict[-i] * nim_avg)
+            net_income_predict.append(temp)
 
+        net_income_predict = [round(num, 2) for num in net_income_predict]
+        net_income_predict.reverse()
+
+        required_rate_of_return = 0.12
+        discount_rate = required_rate_of_return
+        perpetual_growth_rate = 0.04
+        shares_outstanding = self.shares_outstanding()
+
+        terminal_value = (net_income_predict[-1] * (1+perpetual_growth_rate))/(required_rate_of_return-perpetual_growth_rate)
+
+#       Applying Discount Factor
+        discount_factor_list = []
+        for i in range(1, 5):
+            discount_factor_list.append((1+discount_rate)**i)
+
+        present_value_future_cashflow = []
+
+        present_value_future_cashflow = [x / y for x, y in zip(net_income_predict, discount_factor_list)]
+        present_value_future_cashflow.append(terminal_value)
+        todays_value_futurecash = sum(present_value_future_cashflow)
+
+        value_of_share = (todays_value_futurecash)/(shares_outstanding/10000000)
+        value_of_share = round(value_of_share,3)
+
+        print(value_of_share)
 
 if __name__ == '__main__':
 
-    t = FinancialData("polYCab")
-    print(t.shares_outstanding())
+    t = FinancialData("LT")
+    t.discounted_cash_flow()
