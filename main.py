@@ -564,8 +564,9 @@ class FinancialData(object):
 
         return self.shares
 
-    def discounted_cash_flow(self, use):
+    def discounted_cash_flow(self, net_profit=True, operating_cash=False, free_cash=False):
         # using *net profit* to calculate
+        works = True
         rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=4, as_list=True)
         nim_avg = self.net_income_margins(average=True) / 100
         net_income_predict = []
@@ -575,36 +576,47 @@ class FinancialData(object):
         net_income_predict = [round(num, 2) for num in net_income_predict]
         net_income_predict.reverse()
         income_predict = []
-        if use == "net income":
-            income_predict = net_income_predict
-        elif use == "operating cash":
+
+        if operating_cash:
             opm_to_nim_avg = self.operating_to_net_income(average=True)
             # if opm_to_nim_avg is negative return not possible
-            if abs(opm_to_nim_avg) >1:
-                opm_to_nim_avg = opm_to_nim_avg/100
-                print(opm_to_nim_avg)
-            for i in range(1, 5):
-                temp = (net_income_predict[-i] * opm_to_nim_avg)
-                income_predict.append(temp)
-                income_predict = [round(num, 2) for num in income_predict]
-                income_predict.reverse()
-        elif use == "free cash":
+            if opm_to_nim_avg < 0:
+                print("Cannot be determined with Operating cash flow ")
+                print("continuing using net profit")
+                income_predict = net_income_predict
+                works = False
+            #     continue using net income
+            if works:
+                if abs(opm_to_nim_avg) >1:
+                    opm_to_nim_avg = opm_to_nim_avg/100
+                for i in range(1, 5):
+                    temp = (net_income_predict[-i] * opm_to_nim_avg)
+                    income_predict.append(temp)
+                    income_predict = [round(num, 2) for num in income_predict]
+                    income_predict.reverse()
+
+        elif free_cash:
             fcf_to_ni_avg = self.free_cash_to_net_income(average=True)
-            print(fcf_to_ni_avg)
             # if fcf_to_ni_avg is negative return not possible
-            if fcf_to_ni_avg >1:
-                fcf_to_ni_avg = fcf_to_ni_avg/100
+            if fcf_to_ni_avg < 0:
+                print("Cannot be determined with free cash flow ")
+                print("continuing using net profit")
+                income_predict = net_income_predict
+                works = False
 
-            for i in range(1, 5):
-                temp = (net_income_predict[-i] * fcf_to_ni_avg)
-                income_predict.append(temp)
-                income_predict = [round(num, 2) for num in income_predict]
-                income_predict.reverse()
+            if works:
+                if fcf_to_ni_avg >1:
+                    fcf_to_ni_avg = fcf_to_ni_avg/100
 
-            print(fcf_to_ni_avg, " fcf to nim")
-            print(net_income_predict, " net income predict")
-            print(income_predict, " predicted fcf")
-            print(fcf_to_ni_avg, "FCF to nim ")
+                for i in range(1, 5):
+                    temp = (net_income_predict[-i] * fcf_to_ni_avg)
+                    income_predict.append(temp)
+                    income_predict = [round(num, 2) for num in income_predict]
+                    income_predict.reverse()
+
+        elif net_profit:
+            income_predict = net_income_predict
+
         required_rate_of_return = 0.12
         discount_rate = required_rate_of_return
         perpetual_growth_rate = 0.04
@@ -631,7 +643,4 @@ class FinancialData(object):
 
 if __name__ == '__main__':
     t = FinancialData("stltech")
-    # print(t.operating_to_net_income(as_DataFrame=True).to_string())
-    # print(t.operating_to_net_income(average=True))
-    print(t.operating_to_net_income(average=True))
-    # t.discounted_cash_flow(use="operating cash")
+    t.discounted_cash_flow(operating_cash=True)
