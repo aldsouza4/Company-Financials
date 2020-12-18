@@ -519,7 +519,7 @@ class FinancialData(object):
     def free_cash_flow(self, as_list=False, plot=False, as_DataFrame=True):
 
         fcf = [x + y for x, y in zip(self.cash_from_operating_activity(as_list=True),
-                                      self.cash_flow_investing_activities(as_list=True))]
+                                     self.cash_flow_investing_activities(as_list=True))]
         self.r_name = "free_cash_flow"
         return self.disp_data(data=fcf, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=False)
 
@@ -535,7 +535,7 @@ class FinancialData(object):
     def operating_to_net_income(self, as_list=False, plot=False, as_DataFrame=True, average=False):
         net_income = self.annual_net_profit(as_list=True)
         operating_income = self.cash_from_operating_activity(as_list=True)
-        ratio_list = [y/x for x, y in zip(net_income, operating_income)]
+        ratio_list = [y / x for x, y in zip(net_income, operating_income)]
         ratio_list = [element * 100 for element in ratio_list]
         self.percentage = True
         self.r_name = 'operating_to_net_income'
@@ -544,14 +544,11 @@ class FinancialData(object):
     def free_cash_to_net_income(self, as_list=False, plot=False, as_DataFrame=True, average=False):
         net_income = self.annual_net_profit(as_list=True)
         free_cash_flow = self.free_cash_flow(as_list=True)
-        ratio_list = [y/x for x, y in zip(net_income, free_cash_flow)]
-        ratio_list = [element * 100 for element in ratio_list]
+        ratio_list = [y / x for x, y in zip(net_income, free_cash_flow)]
+        # ratio_list = [element * 100 for element in ratio_list]
         self.percentage = True
         self.r_name = 'freecash_to_net_income'
         return self.disp_data(data=ratio_list, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
-
-
-
 
     def shares_outstanding(self):
         data = pd.read_html("https://in.finance.yahoo.com/quote/{0}.NS/key-statistics?p={0}.NS&.tsrc=fin-srch"
@@ -577,34 +574,44 @@ class FinancialData(object):
             net_income_predict.append(temp)
         net_income_predict = [round(num, 2) for num in net_income_predict]
         net_income_predict.reverse()
-        income_predict=[]
+        income_predict = []
         if use == "net income":
             income_predict = net_income_predict
         elif use == "operating cash":
-            operating_cash_predict =[]
             opm_to_nim_avg = self.operating_to_net_income(average=True)
+            # if opm_to_nim_avg is negative return not possible
+            if abs(opm_to_nim_avg) >1:
+                opm_to_nim_avg = opm_to_nim_avg/100
+                print(opm_to_nim_avg)
             for i in range(1, 5):
                 temp = (net_income_predict[-i] * opm_to_nim_avg)
                 income_predict.append(temp)
                 income_predict = [round(num, 2) for num in income_predict]
                 income_predict.reverse()
         elif use == "free cash":
-            free_cash_predict =[]
-            fcf_to_nim_avg = self.free_cash_to_net_income(average=True)
+            fcf_to_ni_avg = self.free_cash_to_net_income(average=True)
+            print(fcf_to_ni_avg)
+            # if fcf_to_ni_avg is negative return not possible
+            if fcf_to_ni_avg >1:
+                fcf_to_ni_avg = fcf_to_ni_avg/100
+
             for i in range(1, 5):
-                temp = (net_income_predict[-i] * fcf_to_nim_avg)
+                temp = (net_income_predict[-i] * fcf_to_ni_avg)
                 income_predict.append(temp)
                 income_predict = [round(num, 2) for num in income_predict]
                 income_predict.reverse()
 
-
+            print(fcf_to_ni_avg, " fcf to nim")
+            print(net_income_predict, " net income predict")
+            print(income_predict, " predicted fcf")
+            print(fcf_to_ni_avg, "FCF to nim ")
         required_rate_of_return = 0.12
         discount_rate = required_rate_of_return
         perpetual_growth_rate = 0.04
         shares_outstanding = self.shares_outstanding()
 
         terminal_value = (income_predict[-1] * (1 + perpetual_growth_rate)) / (
-                    required_rate_of_return - perpetual_growth_rate)
+                required_rate_of_return - perpetual_growth_rate)
 
         #       Applying Discount Factor
 
@@ -619,11 +626,12 @@ class FinancialData(object):
         value_of_share = (todays_value_futurecash) / (shares_outstanding / 10000000)
         value_of_share = round(value_of_share, 3)
 
-        print(value_of_share)
+        print(value_of_share, " value per share ")
 
 
 if __name__ == '__main__':
-    t = FinancialData("STLTECH")
+    t = FinancialData("stltech")
+    # print(t.operating_to_net_income(as_DataFrame=True).to_string())
+    # print(t.operating_to_net_income(average=True))
+    print(t.operating_to_net_income(average=True))
     # t.discounted_cash_flow(use="operating cash")
-    # t.discounted_cash_flow(use="free cash")
-    print(t.free_cash_to_net_income(average=True))
