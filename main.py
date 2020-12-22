@@ -310,6 +310,9 @@ class FinancialData(object):
             plt.tight_layout()
             plt.show()
 
+        if only_prediction_list:
+            return predictions[:-num_terms_pred]
+
         if as_list:
             return input_list + predictions[:-1]
 
@@ -317,8 +320,7 @@ class FinancialData(object):
             data = pd.DataFrame(data=[input_list + predictions[:-1]], columns=self.column_list, index=[self.pd_index])
             return data
 
-        if only_prediction_list:
-            return predictions[:-1]
+
 
     def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
         self.pd_index = naming_function(self.r_name)
@@ -564,20 +566,31 @@ class FinancialData(object):
 
         return self.shares
 
-    def discounted_cash_flow(self, net_profit=True, operating_cash=False, free_cash=False):
-        # using *net profit* to calculate
+    def discounted_cash_flow(self, net_profit=True, operating_cash=False, free_cash=False, num_yrs_in_rrr=4,
+                             using_to_predict=False, p_net_profit=True, p_operating_cash=False, p_free_cash=False,
+                             p_yrs=1):
+
+        if using_to_predict:
+            net_revenue = self.annual_revenue(as_list=True)
+            rev_predict = self.make_predictions(net_revenue, as_list=True, num_terms_pred=p_yrs+num_yrs_in_rrr)
+
+        elif using_to_predict == False:
+            rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=num_yrs_in_rrr,
+                                                as_list=True)
+        else:
+            rev_predict = 0
+
         works = True
-        rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=4, as_list=True)
         nim_avg = self.net_income_margins(average=True) / 100
         net_income_predict = []
-        for i in range(1, 5):
+        for i in range(1, num_yrs_in_rrr+1):
             temp = (rev_predict[-i] * nim_avg)
             net_income_predict.append(temp)
         net_income_predict = [round(num, 2) for num in net_income_predict]
         net_income_predict.reverse()
         income_predict = []
 
-        if operating_cash:
+        if operating_cash or (using_to_predict and p_operating_cash):
             opm_to_nim_avg = self.operating_to_net_income(average=True)
             # if opm_to_nim_avg is negative return not possible
             if opm_to_nim_avg < 0:
@@ -587,15 +600,15 @@ class FinancialData(object):
                 works = False
             #     continue using net income
             if works:
-                if abs(opm_to_nim_avg) >1:
-                    opm_to_nim_avg = opm_to_nim_avg/100
+                if abs(opm_to_nim_avg) > 1:
+                    opm_to_nim_avg = opm_to_nim_avg / 100
                 for i in range(1, 5):
                     temp = (net_income_predict[-i] * opm_to_nim_avg)
                     income_predict.append(temp)
                     income_predict = [round(num, 2) for num in income_predict]
                     income_predict.reverse()
 
-        elif free_cash:
+        elif free_cash or (using_to_predict and p_free_cash):
             fcf_to_ni_avg = self.free_cash_to_net_income(average=True)
             # if fcf_to_ni_avg is negative return not possible
             if fcf_to_ni_avg < 0:
@@ -605,8 +618,8 @@ class FinancialData(object):
                 works = False
 
             if works:
-                if fcf_to_ni_avg >1:
-                    fcf_to_ni_avg = fcf_to_ni_avg/100
+                if fcf_to_ni_avg > 1:
+                    fcf_to_ni_avg = fcf_to_ni_avg / 100
 
                 for i in range(1, 5):
                     temp = (net_income_predict[-i] * fcf_to_ni_avg)
@@ -614,7 +627,7 @@ class FinancialData(object):
                     income_predict = [round(num, 2) for num in income_predict]
                     income_predict.reverse()
 
-        elif net_profit:
+        elif net_profit or (using_to_predict and p_net_profit):
             income_predict = net_income_predict
 
         required_rate_of_return = 0.12
@@ -638,9 +651,18 @@ class FinancialData(object):
         value_of_share = (todays_value_futurecash) / (shares_outstanding / 10000000)
         value_of_share = round(value_of_share, 3)
 
-        print(value_of_share, " value per share ")
+        return value_of_share
+        # print(value_of_share, " value per share ")
+
+    def discounted_cash_flow_price_predictor(self, predict_no_yrs=1, net_profit=True, operating_cash=False,
+                                             free_cash=False):
+        return self.discounted_cash_flow(using_to_predict=True, p_yrs=predict_no_yrs, p_net_profit=net_profit,
+                                         p_operating_cash=operating_cash, p_free_cash=free_cash)
+
 
 
 if __name__ == '__main__':
-    t = FinancialData("stltech")
-    t.discounted_cash_flow(operating_cash=True)
+    t = FinancialData("itc")
+    print(t.discounted_cash_flow(operating_cash=True))
+    print(t.discounted_cash_flow_price_predictor(operating_cash=True))
+    # print(t.make_predictions(t.annual_revenue(as_list=True),num_terms_pred= 3, plot=True))
