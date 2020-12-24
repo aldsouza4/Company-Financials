@@ -7,6 +7,11 @@ from statistics import mean
 
 
 def clean_values(num):
+    """
+    takes in a string and returns the int or float or percentage (in decimal)
+    :param num:str
+    :return:
+    """
     if "," in num and "%" not in num:
         num = num.replace(",", "")
         return float(num)
@@ -24,6 +29,11 @@ def clean_values(num):
 
 
 def naming_function(name_):
+    """
+    takes in the type of result nd returns the result in presentable form
+    :param name_:str
+    :return:
+    """
     if name_ == "quarter_revenue":
         return "Quarter Revenue"
     elif name_ == "quarter_operating_profits":
@@ -90,16 +100,36 @@ def naming_function(name_):
 
 
 def clean_ser(val):
+    # takes the vale, reshapes it and returns it in list for,
     return (np.around((val.reshape(-1)), 2)).tolist()
 
 
 class FinancialData(object):
+    """
+    Financial data of the company
+    """
 
     def __init__(self, ticker):
+        """
+        :param ticker:takes in the ticker of the comapny
+        """
         self.ticker = ticker.upper()
         self.df = pd.read_html("https://www.screener.in/company/{}/consolidated/".format(self.ticker))
 
     def financial_results(self, name, display=False):
+        """
+        takes in  the name of the table and returns the table
+        included tables are:
+        1.Quarter Profit and Loss Statements
+        2.Annual Profit and loss Statements
+        3.Balance Sheet Items
+        4.Cash Flow items
+
+        :param self:
+        :param name: takes in the table name
+        :param display: True to display the tabel
+        :return: returns the table
+        """
 
         data = None
 
@@ -155,6 +185,18 @@ class FinancialData(object):
             return data
 
     def __get_results(self, table_name, name, as_list=False, plot_inner=False, asDataFrame=True):
+        """
+        private method
+        takes in the table item and returns it in the desired form
+
+        :param table_name:takes in the name of the table
+        :param name: name of the item from the list
+        :param as_list: if True returns the the row as a list
+        :param plot_inner: if True Plots a seaborn line plot
+        :param asDataFrame: if True returns the the row as a Dataframe
+        :return: returns the row in desired data type
+
+        """
         data = self.financial_results(name=table_name)
         self.percentage = False
 
@@ -256,6 +298,16 @@ class FinancialData(object):
 
     def make_predictions(self, input_list, num_terms_pred=3, plot=False, as_list=False, asDataFrame=True,
                          only_prediction_list=False):
+        """
+
+        :param input_list: Takes in the input as list
+        :param num_terms_pred: takes in the number of year to be predicted : default is 3 years
+        :param plot: If True plots a seaborn line plot
+        :param as_list: if True returns  in list form
+        :param asDataFrame: if True returns in DataFrame
+        :param only_prediction_list: if True, returns only predicted list
+        :return:
+        """
 
         name = self.r_name
 
@@ -290,6 +342,9 @@ class FinancialData(object):
         for i in range(num_terms_pred):
             self.column_list.append("March 20{} E".format(scrap + i))
 
+        if as_list:
+            return input_list + predictions[:-1]
+
         if plot:
             plt.figure(figsize=(15, 8))
             sns.set_theme()
@@ -311,18 +366,22 @@ class FinancialData(object):
             plt.show()
 
         if only_prediction_list:
-            return predictions[:-num_terms_pred]
-
-        if as_list:
-            return input_list + predictions[:-1]
+            return predictions[-num_terms_pred:]
 
         if asDataFrame:
             data = pd.DataFrame(data=[input_list + predictions[:-1]], columns=self.column_list, index=[self.pd_index])
             return data
 
-
-
     def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
+        """
+
+        :param data: takes in the data
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :param average: if True returns average of the Net income Margins
+        :return: returns the output in desired form/ Object
+        """
         self.pd_index = naming_function(self.r_name)
 
         if as_list:
@@ -363,30 +422,65 @@ class FinancialData(object):
     # -----------QUARTER DATA-----------------------------------------------------
 
     def quarter_revenue(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "quarter_revenue"
         t_name = "quarter"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def quarter_operating_profits(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "quarter_operating_profits"
         t_name = "quarter"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def quarter_operating_margins(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "quarter_operating_margins"
         t_name = "quarter"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def quarter_profit_before_tax(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "quarter_profit_before_tax"
         t_name = "quarter"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def quarter_net_profit(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "quarter_net_profit"
         t_name = "quarter"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
@@ -395,36 +489,78 @@ class FinancialData(object):
     # -----------ANNUAL DATA-----------------------------------------------------
 
     def annual_revenue(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "annual_revenue"
         t_name = "annual"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def annual_operating_profits(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "annual_operating_profits"
         t_name = "annual"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def annual_operating_margins(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "annual_operating_margins"
         t_name = "annual"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def annual_profit_before_tax(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "annual_profit_before_tax"
         t_name = "annual"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def annual_net_profit(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "annual_net_profit"
         t_name = "annual"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def annual_eps(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "annual_eps"
         t_name = "annual"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
@@ -433,54 +569,117 @@ class FinancialData(object):
     # ------------Balance Sheet Items--------------------------------
 
     def share_capital(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "share_capital"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def reserves(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "reserves"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def borrowings(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "borrowings"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def other_liabilities(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "other_liabilities"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def total_liabilities(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "total_liabilities"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def fixed_assets(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "fixed_assets"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def capital_work(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "capital_work"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def other_assets(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "other_assets"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def total_assets(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "total_assets"
         t_name = "balance"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
@@ -489,36 +688,77 @@ class FinancialData(object):
     # ------------Cash Flow Items ------------------------------------
 
     def cash_from_operating_activity(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "cash_flow_operating_activities"
         t_name = "cash_flow"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def cash_flow_investing_activities(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "cash_flow_investing_activities"
         t_name = "cash_flow"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def cash_from_financing_activity(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "cash_flow_financing_activities"
         t_name = "cash_flow"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def net_cash_flow(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "net_cash_flow"
         t_name = "cash_flow"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def roce(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from __get_results
+        """
+
         self.r_name = "roce"
         t_name = "ROCE"
         return self.__get_results(table_name=t_name, name=self.r_name, as_list=as_list, plot_inner=plot,
                                   asDataFrame=as_DataFrame)
 
     def free_cash_flow(self, as_list=False, plot=False, as_DataFrame=True):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :return: returns the output from disp_data method
+        """
 
         fcf = [x + y for x, y in zip(self.cash_from_operating_activity(as_list=True),
                                      self.cash_flow_investing_activities(as_list=True))]
@@ -526,6 +766,14 @@ class FinancialData(object):
         return self.disp_data(data=fcf, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=False)
 
     def net_income_margins(self, as_list=False, plot=False, as_DataFrame=True, average=False):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :param average: if True returns average of the Net income Margins
+        :return: returns the output from disp_data method
+        """
+
         net_income = self.annual_net_profit(as_list=True)
         revenue = self.annual_revenue(as_list=True)
         nim = [x / y for x, y in zip(net_income, revenue)]
@@ -535,6 +783,14 @@ class FinancialData(object):
         return self.disp_data(data=nim, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
 
     def operating_to_net_income(self, as_list=False, plot=False, as_DataFrame=True, average=False):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :param average: if True returns average of the Net income Margins
+        :return: returns the output from disp_data method
+        """
+
         net_income = self.annual_net_profit(as_list=True)
         operating_income = self.cash_from_operating_activity(as_list=True)
         ratio_list = [y / x for x, y in zip(net_income, operating_income)]
@@ -544,6 +800,13 @@ class FinancialData(object):
         return self.disp_data(data=ratio_list, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
 
     def free_cash_to_net_income(self, as_list=False, plot=False, as_DataFrame=True, average=False):
+        """
+        :param as_list: if True returns as list
+        :param plot: if True returns a seaborn line plot
+        :param as_DataFrame: if True returns a Data frame
+        :param average: if True returns average of the Net income Margins
+        :return: returns the output from disp_data method
+        """
         net_income = self.annual_net_profit(as_list=True)
         free_cash_flow = self.free_cash_flow(as_list=True)
         ratio_list = [y / x for x, y in zip(net_income, free_cash_flow)]
@@ -553,6 +816,9 @@ class FinancialData(object):
         return self.disp_data(data=ratio_list, as_list=as_list, plot=plot, as_DataFrame=as_DataFrame, average=average)
 
     def shares_outstanding(self):
+        """
+        :return: Returns number of outstanding shares ( Data from Yahoo Finance )
+        """
         data = pd.read_html("https://in.finance.yahoo.com/quote/{0}.NS/key-statistics?p={0}.NS&.tsrc=fin-srch"
                             .format(self.ticker))
         raw_shares = data[2].iloc[2][1]
@@ -566,13 +832,31 @@ class FinancialData(object):
 
         return self.shares
 
-    def discounted_cash_flow(self, net_profit=True, operating_cash=False, free_cash=False, num_yrs_in_rrr=4,
-                             using_to_predict=False, p_net_profit=True, p_operating_cash=False, p_free_cash=False,
-                             p_yrs=1):
+    def discounted_cash_flow(self, net_profit=True, operating_cash=False, free_cash=False, required_rate_of_return=0.12,
+                             perpetual_growth_rate=0.04, num_yrs_in_rrr=4, using_to_predict=False, p_net_profit=True,
+                             p_operating_cash=False, p_free_cash=False, p_yrs=1):
+        """
+        Discounted cash flow (DCF) is a valuation method used to estimate the value of an investment based on its
+        expected future cash flows. DCF analysis attempts to figure out the value of an investment today,
+        based on projections of how much money it will generate in the future.
+
+        :param perpetual_growth_rate: Growth rate of the company after the RRR period : defaulted to 4 %
+        :param required_rate_of_return: Required rate of return : Defaulted to 12%
+        :param net_profit: If True uses Net Profit for analysis
+        :param operating_cash: If True uses operating cash for analysis
+        :param free_cash:If True uses free cash flow for analysis
+        :param num_yrs_in_rrr: Number of years in Required rate of return
+        :param using_to_predict: For discounted_cash_flow_price_predictor method
+        :param p_net_profit: For discounted_cash_flow_price_predictor method
+        :param p_operating_cash: For discounted_cash_flow_price_predictor method
+        :param p_free_cash: For discounted_cash_flow_price_predictor method
+        :param p_yrs: For discounted_cash_flow_price_predictor method
+        :return: returns Fair value of the share
+        """
 
         if using_to_predict:
             net_revenue = self.annual_revenue(as_list=True)
-            rev_predict = self.make_predictions(net_revenue, as_list=True, num_terms_pred=p_yrs+num_yrs_in_rrr)
+            rev_predict = self.make_predictions(net_revenue, as_list=True, num_terms_pred=p_yrs + num_yrs_in_rrr)
 
         elif using_to_predict == False:
             rev_predict = self.make_predictions(self.annual_revenue(as_list=True), num_terms_pred=num_yrs_in_rrr,
@@ -583,7 +867,7 @@ class FinancialData(object):
         works = True
         nim_avg = self.net_income_margins(average=True) / 100
         net_income_predict = []
-        for i in range(1, num_yrs_in_rrr+1):
+        for i in range(1, num_yrs_in_rrr + 1):
             temp = (rev_predict[-i] * nim_avg)
             net_income_predict.append(temp)
         net_income_predict = [round(num, 2) for num in net_income_predict]
@@ -630,9 +914,7 @@ class FinancialData(object):
         elif net_profit or (using_to_predict and p_net_profit):
             income_predict = net_income_predict
 
-        required_rate_of_return = 0.12
         discount_rate = required_rate_of_return
-        perpetual_growth_rate = 0.04
         shares_outstanding = self.shares_outstanding()
 
         terminal_value = (income_predict[-1] * (1 + perpetual_growth_rate)) / (
@@ -648,21 +930,30 @@ class FinancialData(object):
         present_value_future_cashflow.append(terminal_value)
         todays_value_futurecash = sum(present_value_future_cashflow)
 
-        value_of_share = (todays_value_futurecash) / (shares_outstanding / 10000000)
+        value_of_share = todays_value_futurecash / (shares_outstanding / 10000000)
         value_of_share = round(value_of_share, 3)
 
         return value_of_share
         # print(value_of_share, " value per share ")
 
     def discounted_cash_flow_price_predictor(self, predict_no_yrs=1, net_profit=True, operating_cash=False,
-                                             free_cash=False):
-        return self.discounted_cash_flow(using_to_predict=True, p_yrs=predict_no_yrs, p_net_profit=net_profit,
-                                         p_operating_cash=operating_cash, p_free_cash=free_cash)
+                                             free_cash=False, required_rate_of_return=0.12, perpetual_growth_rate=0.04):
+        """
+        :param perpetual_growth_rate: Growth rate of the company after the RRR period : defaulted to 4 %
+        :param required_rate_of_return: Required rate of return : Defaulted to 12%
+        :param predict_no_yrs: Stock price to be predicted of _ number of years
+        :param net_profit: If True uses Net Profit for analysis
+        :param operating_cash: If True uses operating cash for analysis
+        :param free_cash:If True uses free cash flow for analysis
+        :return: resturns the fair vale of the stock _ number of years later
+        """
 
+        return self.discounted_cash_flow(using_to_predict=True, p_yrs=predict_no_yrs, p_net_profit=net_profit,
+                                         p_operating_cash=operating_cash, p_free_cash=free_cash,
+                                         required_rate_of_return=required_rate_of_return,
+                                         perpetual_growth_rate=perpetual_growth_rate)
 
 
 if __name__ == '__main__':
     t = FinancialData("itc")
-    print(t.discounted_cash_flow(operating_cash=True))
-    print(t.discounted_cash_flow_price_predictor(operating_cash=True))
-    # print(t.make_predictions(t.annual_revenue(as_list=True),num_terms_pred= 3, plot=True))
+    print(t.make_predictions(t.annual_net_profit(as_list=True), only_prediction_list=True))
