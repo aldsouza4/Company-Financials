@@ -2,8 +2,12 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
+import pandas_datareader as wb
 import numpy as np
 from statistics import mean
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 
 
 def clean_values(num):
@@ -953,7 +957,36 @@ class FinancialData(object):
                                          required_rate_of_return=required_rate_of_return,
                                          perpetual_growth_rate=perpetual_growth_rate)
 
+    def beta(self, num_years=5):
+        tick = "{}.NS".format(self.ticker)
+        tickers = [tick, '^NSEI']
+        b_data = pd.DataFrame()
+        start_date = datetime.now() - relativedelta(years=num_years)
+        start_input = "{0}-{1}-{2}".format(start_date.year, start_date.month, start_date.day)
+
+        for st in tickers:
+            b_data[st] = wb.DataReader(st, data_source='yahoo', start=start_input)['Adj Close']
+
+        sec_returns = np.log(b_data / b_data.shift(1))
+        cov = sec_returns.cov()*250
+        cov_with_nifty = cov.iloc[0, 1]
+
+        nifty_var = sec_returns['^NSEI'].var()*250
+
+        self.st_beta = cov_with_nifty/nifty_var
+        return self.st_beta
+
+    def caPM_predict(self, predict_no_yrs=1, risk_free_return=0.04):
+        tick = "{}.NS".format(self.ticker)
+        stock_price = round(wb.DataReader(tick, data_source='yahoo')['Adj Close'][-1], 2)
+        predict_percentage = risk_free_return + self.beta() * 0.05
+
+        for y in range(predict_no_yrs):
+            stock_price *= 1+predict_percentage
+
+        return round(stock_price, 2)
+
 
 if __name__ == '__main__':
     t = FinancialData("itc")
-    print(t.make_predictions(t.annual_net_profit(as_list=True), only_prediction_list=True))
+    t.caPM_predict(predict_no_yrs=5)
