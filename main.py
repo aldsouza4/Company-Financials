@@ -940,7 +940,7 @@ class FinancialData(object):
         return value_of_share
         # print(value_of_share, " value per share ")
 
-    def discounted_cash_flow_price_predictor(self, predict_no_yrs=1, net_profit=True, operating_cash=False,
+    def discounted_cash_flow_price_predictor(self, predict_no_yrs=1,plot = False, net_profit=True, operating_cash=False,
                                              free_cash=False, required_rate_of_return=0.12, perpetual_growth_rate=0.04):
         """
         :param perpetual_growth_rate: Growth rate of the company after the RRR period : defaulted to 4 %
@@ -952,20 +952,45 @@ class FinancialData(object):
         :return: resturns the fair vale of the stock _ number of years later
         """
 
-        return self.discounted_cash_flow(using_to_predict=True, p_yrs=predict_no_yrs, p_net_profit=net_profit,
+        stock_price = self.discounted_cash_flow(using_to_predict=True, p_yrs=predict_no_yrs, p_net_profit=net_profit,
                                          p_operating_cash=operating_cash, p_free_cash=free_cash,
                                          required_rate_of_return=required_rate_of_return,
                                          perpetual_growth_rate=perpetual_growth_rate)
+        if plot:
+            start_date = datetime.now() - relativedelta(years=5)
+            self.start_input = "{0}-{1}-{2}".format(start_date.year, start_date.month, start_date.day)
+
+            tick = "{}.NS".format(self.ticker)
+            stock_price_data = wb.DataReader(tick, data_source='yahoo', start=self.start_input)['Adj Close']
+            stock_price_data = stock_price_data.to_frame()
+            p_date = datetime.now() + relativedelta(years=predict_no_yrs)
+            stock_price_data = stock_price_data.reset_index()
+            stock_price_data['Date'] = stock_price_data['Date'].apply(lambda x: x.date())
+            predict_data = pd.DataFrame(columns=['Date', 'Adj Close'])
+            predict_data.loc[0]=[stock_price_data.iloc[-1]['Date'], stock_price_data.iloc[-1]['Adj Close']]
+            predict_data.loc[1]=[p_date.date(), stock_price]
+
+            plt.figure(figsize=(15, 8))
+            sns.set_style("darkgrid")
+            plt.xlabel('Date', fontsize=14)
+            plt.ylabel('Price', fontsize=14)
+            plt.title("{}".format(tick), fontsize=18)
+            plt.tight_layout()
+            plt.plot_date(x=predict_data['Date'], y=predict_data['Adj Close'], linestyle='solid', marker=None)
+            plt.plot_date(x=stock_price_data['Date'], y=stock_price_data['Adj Close'], linestyle='solid', marker=None)
+            plt.legend(labels=[ "Expectation", 'Declared'])
+            plt.show()
+        return stock_price
 
     def beta(self, num_years=5):
         tick = "{}.NS".format(self.ticker)
         tickers = [tick, '^NSEI']
         b_data = pd.DataFrame()
         start_date = datetime.now() - relativedelta(years=num_years)
-        start_input = "{0}-{1}-{2}".format(start_date.year, start_date.month, start_date.day)
+        self.start_input = "{0}-{1}-{2}".format(start_date.year, start_date.month, start_date.day)
 
         for st in tickers:
-            b_data[st] = wb.DataReader(st, data_source='yahoo', start=start_input)['Adj Close']
+            b_data[st] = wb.DataReader(st, data_source='yahoo', start=self.start_input)['Adj Close']
 
         sec_returns = np.log(b_data / b_data.shift(1))
         cov = sec_returns.cov()*250
@@ -976,7 +1001,7 @@ class FinancialData(object):
         self.st_beta = cov_with_nifty/nifty_var
         return self.st_beta
 
-    def caPM_predict(self, predict_no_yrs=1, risk_free_return=0.04):
+    def caPM_predict(self, predict_no_yrs=1, risk_free_return=0.04, plot = False):
         tick = "{}.NS".format(self.ticker)
         stock_price = round(wb.DataReader(tick, data_source='yahoo')['Adj Close'][-1], 2)
         predict_percentage = risk_free_return + self.beta() * 0.05
@@ -984,9 +1009,35 @@ class FinancialData(object):
         for y in range(predict_no_yrs):
             stock_price *= 1+predict_percentage
 
+        if plot:
+
+            stock_price_data = wb.DataReader(tick, data_source='yahoo', start=self.start_input )['Adj Close']
+            stock_price_data = stock_price_data.to_frame()
+            p_date = datetime.now() + relativedelta(years=predict_no_yrs)
+            # stock_price_data = pd.DataFrame(data=stock_price_data, columns=['Date', 'Price'])
+            stock_price_data = stock_price_data.reset_index()
+            stock_price_data['Date'] = stock_price_data['Date'].apply(lambda x: x.date())
+            # stock_price_data.loc[len(stock_price_data.index)] = [p_date.date(), stock_price]
+            predict_data = pd.DataFrame(columns=['Date', 'Adj Close'])
+            predict_data.loc[0]=[stock_price_data.iloc[-1]['Date'],stock_price_data.iloc[-1]['Adj Close']]
+            predict_data.loc[1]=[p_date.date(), stock_price]
+
+            plt.figure(figsize=(15, 8))
+            sns.set_style("darkgrid")
+            plt.xlabel('Date', fontsize=14)
+            plt.ylabel('Price', fontsize=14)
+            plt.title("{}".format(tick), fontsize=18)
+            plt.tight_layout()
+            plt.plot_date(x=predict_data['Date'], y=predict_data['Adj Close'], linestyle='solid', marker=None)
+            plt.plot_date(x=stock_price_data['Date'], y=stock_price_data['Adj Close'], linestyle='solid', marker=None)
+            plt.legend(labels=[ "Expectation", 'Declared'])
+            plt.show()
+
+
         return round(stock_price, 2)
 
-
 if __name__ == '__main__':
-    t = FinancialData("itc")
-    t.caPM_predict(predict_no_yrs=5)
+    t = FinancialData("polycab")
+    # print(t.discounted_cash_flow(net_profit=True))
+    # print(t.discounted_cash_flow_price_predictor())
+    # print(t.annual_net_profit(as_DataFrame=True))
