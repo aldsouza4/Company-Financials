@@ -1014,10 +1014,8 @@ class FinancialData(object):
             stock_price_data = wb.DataReader(tick, data_source='yahoo', start=self.start_input )['Adj Close']
             stock_price_data = stock_price_data.to_frame()
             p_date = datetime.now() + relativedelta(years=predict_no_yrs)
-            # stock_price_data = pd.DataFrame(data=stock_price_data, columns=['Date', 'Price'])
             stock_price_data = stock_price_data.reset_index()
             stock_price_data['Date'] = stock_price_data['Date'].apply(lambda x: x.date())
-            # stock_price_data.loc[len(stock_price_data.index)] = [p_date.date(), stock_price]
             predict_data = pd.DataFrame(columns=['Date', 'Adj Close'])
             predict_data.loc[0]=[stock_price_data.iloc[-1]['Date'],stock_price_data.iloc[-1]['Adj Close']]
             predict_data.loc[1]=[p_date.date(), stock_price]
@@ -1033,11 +1031,55 @@ class FinancialData(object):
             plt.legend(labels=[ "Expectation", 'Declared'])
             plt.show()
 
-
         return round(stock_price, 2)
 
+    def plot_stock(self, nifty_50 = True, num_years=5):
+        tick = "{}.NS".format(self.ticker)
+        if nifty_50:
+            tickers = [tick, '^NSEI']
+        else:
+            tickers = [tick]
+
+        plot_data = pd.DataFrame()
+        start_date = datetime.now() - relativedelta(years=num_years)
+        self.start_input = "{0}-{1}-{2}".format(start_date.year, start_date.month, start_date.day)
+
+        for st in tickers:
+            plot_data[st] = wb.DataReader(st, data_source='yahoo', start=self.start_input)['Adj Close']
+
+        plot_data = plot_data.reset_index()
+        plot_data['Date'] = plot_data['Date'].apply(lambda x: x.date())
+
+        if not nifty_50:
+
+            plt.figure(figsize=(15, 8))
+            sns.set_style("darkgrid")
+            plt.xlabel('Date', fontsize=14)
+            plt.ylabel('Price', fontsize=14)
+            plt.title("{}".format(tick), fontsize=18)
+            plt.tight_layout()
+            plt.plot_date(x=plot_data['Date'], y=plot_data[tick], linestyle='solid', marker=None)
+            plt.show()
+
+        if nifty_50:
+
+            log_plt = plot_data
+            log_plt = log_plt.drop('Date', axis=1)
+            log_plot = (log_plt / log_plt.iloc[0] * 100)
+
+
+            plt.figure(figsize=(15, 8))
+            sns.set_style("darkgrid")
+            plt.xlabel('Time', fontsize=14)
+            plt.ylabel('Increase (%)', fontsize=14)
+            plt.title("{} vs Nifty50 \n {} year Chart".format(tick,num_years), fontsize=18)
+            plt.tight_layout()
+            plt.xticks([])
+            sns.lineplot(data=log_plot, dashes=False)
+            plt.legend(labels=[tick, 'NIFTY50'])
+            plt.show()
+
+
 if __name__ == '__main__':
-    t = FinancialData("polycab")
-    # print(t.discounted_cash_flow(net_profit=True))
-    # print(t.discounted_cash_flow_price_predictor())
-    # print(t.annual_net_profit(as_DataFrame=True))
+    t = FinancialData("tcs")
+    t.plot_stock()
