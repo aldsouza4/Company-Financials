@@ -940,7 +940,7 @@ class FinancialData(object):
         return value_of_share
         # print(value_of_share, " value per share ")
 
-    def discounted_cash_flow_price_predictor(self, predict_no_yrs=1,plot = False, net_profit=True, operating_cash=False,
+    def discounted_cash_flow_price_predictor(self, predict_no_yrs=1, plot = False, net_profit=True, operating_cash=False,
                                              free_cash=False, required_rate_of_return=0.12, perpetual_growth_rate=0.04):
         """
         :param perpetual_growth_rate: Growth rate of the company after the RRR period : defaulted to 4 %
@@ -1048,7 +1048,7 @@ class FinancialData(object):
             plot_data[st] = wb.DataReader(st, data_source='yahoo', start=self.start_input)['Adj Close']
 
         plot_data = plot_data.reset_index()
-        plot_data['Date'] = plot_data['Date'].apply(lambda x: x.date())
+        plot_data['index'] = plot_data['index'].apply(lambda x: x.date())
 
         if not nifty_50:
 
@@ -1058,13 +1058,13 @@ class FinancialData(object):
             plt.ylabel('Price', fontsize=14)
             plt.title("{}".format(tick), fontsize=18)
             plt.tight_layout()
-            plt.plot_date(x=plot_data['Date'], y=plot_data[tick], linestyle='solid', marker=None)
+            plt.plot_date(x=plot_data['index'], y=plot_data[tick], linestyle='solid', marker=None)
             plt.show()
 
         if nifty_50:
 
             log_plt = plot_data
-            log_plt = log_plt.drop('Date', axis=1)
+            log_plt = log_plt.drop('index', axis=1)
             log_plot = (log_plt / log_plt.iloc[0] * 100)
 
 
@@ -1082,4 +1082,5 @@ class FinancialData(object):
 
 if __name__ == '__main__':
     t = FinancialData("tcs")
+    # t.make_predictions(t.net_cash_flow(as_list=True), plot=True)
     t.plot_stock()
