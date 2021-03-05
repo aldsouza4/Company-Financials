@@ -103,7 +103,7 @@ def naming_function(name_):
 
 
 def clean_ser(val):
-    # takes the vale, reshapes it and returns it in list for,
+    # takes the vale, reshapes it and returns it in list format
     return (np.around((val.reshape(-1)), 2)).tolist()
 
 
@@ -127,6 +127,7 @@ class FinancialData(object):
         2.Annual Profit and loss Statements
         3.Balance Sheet Items
         4.Cash Flow items
+
         :param self:
         :param name: takes in the table name
         :param display: True to display the tabel
@@ -190,12 +191,14 @@ class FinancialData(object):
         """
         private method
         takes in the table item and returns it in the desired form
+
         :param table_name:takes in the name of the table
         :param name: name of the item from the list
         :param as_list: if True returns the the row as a list
         :param plot_inner: if True Plots a seaborn line plot
         :param asDataFrame: if True returns the the row as a Dataframe
         :return: returns the row in desired data type
+
         """
         data = self.financial_results(name=table_name)
         self.percentage = False
@@ -299,6 +302,7 @@ class FinancialData(object):
     def make_predictions(self, input_list, num_terms_pred=3, plot=False, as_list=False, asDataFrame=True,
                          only_prediction_list=False):
         """
+
         :param input_list: Takes in the input as list
         :param num_terms_pred: takes in the number of year to be predicted : default is 3 years
         :param plot: If True plots a seaborn line plot
@@ -373,6 +377,7 @@ class FinancialData(object):
 
     def disp_data(self, data, as_list=False, plot=False, as_DataFrame=True, average=False):
         """
+
         :param data: takes in the data
         :param as_list: if True returns as list
         :param plot: if True returns a seaborn line plot
@@ -837,6 +842,7 @@ class FinancialData(object):
         Discounted cash flow (DCF) is a valuation method used to estimate the value of an investment based on its
         expected future cash flows. DCF analysis attempts to figure out the value of an investment today,
         based on projections of how much money it will generate in the future.
+
         :param perpetual_growth_rate: Growth rate of the company after the RRR period : defaulted to 4 %
         :param required_rate_of_return: Required rate of return : Defaulted to 12%
         :param net_profit: If True uses Net Profit for analysis
@@ -1025,7 +1031,7 @@ class FinancialData(object):
 
         return round(stock_price, 2)
 
-    def plot_stock(self, nifty_50=True, num_years=5):
+    def plot_stock(self, nifty_50=False, num_years=5):
         tick = "{}.NS".format(self.ticker)
         if nifty_50:
             tickers = [tick, '^NSEI']
@@ -1040,7 +1046,11 @@ class FinancialData(object):
             plot_data[st] = wb.DataReader(st, data_source='yahoo', start=self.start_input)['Adj Close']
 
         plot_data = plot_data.reset_index()
-        plot_data['index'] = plot_data['index'].apply(lambda x: x.date())
+        print(plot_data)
+
+        # for mac plot_data['index'] = plot_data['index'].apply(lambda x: x.date())
+
+        plot_data['index'] = plot_data['Date'].apply(lambda x: x.date())
 
         if not nifty_50:
             plt.figure(figsize=(15, 8))
@@ -1070,6 +1080,7 @@ class FinancialData(object):
 
 
 if __name__ == '__main__':
-    t = FinancialData("tcs")
-    # t.make_predictions(t.net_cash_flow(as_list=True), plot=True)
+    t = FinancialData("TCS")
+    # # t.make_predictions(t.net_cash_flow(as_list=True), num_terms_pred=2, plot=True)
+    # t.discounted_cash_flow_price_predictor(predict_no_yrs=1, plot=True)
     t.plot_stock()
