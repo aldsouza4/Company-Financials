@@ -1048,9 +1048,11 @@ class FinancialData(object):
         plot_data = plot_data.reset_index()
         print(plot_data)
 
-        # for mac plot_data['index'] = plot_data['index'].apply(lambda x: x.date())
+        try:
+            plot_data['index'] = plot_data['index'].apply(lambda x: x.date())
 
-        plot_data['index'] = plot_data['Date'].apply(lambda x: x.date())
+        except Exception:
+            plot_data['index'] = plot_data['Date'].apply(lambda x: x.date())
 
         if not nifty_50:
             plt.figure(figsize=(15, 8))
@@ -1084,3 +1086,4 @@ if __name__ == '__main__':
     # # t.make_predictions(t.net_cash_flow(as_list=True), num_terms_pred=2, plot=True)
     # t.discounted_cash_flow_price_predictor(predict_no_yrs=1, plot=True)
     t.plot_stock()
+    #
