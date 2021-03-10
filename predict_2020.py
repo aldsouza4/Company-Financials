@@ -1006,7 +1006,7 @@ class FinancialData(object):
 
     def caPM_predict(self, predict_no_yrs=1, risk_free_return=0.04, plot = False):
         tick = "{}.NS".format(self.ticker)
-        stock_price = round(wb.DataReader(tick, data_source='yahoo')['Adj Close'][-1], 2)
+        stock_price = round(wb.DataReader(tick, data_source='yahoo')['Adj Close'][-240], 2)
         predict_percentage = risk_free_return + self.beta() * 0.05
 
         for y in range(predict_no_yrs):
@@ -1085,4 +1085,4 @@ class FinancialData(object):
 
 if __name__ == '__main__':
     t = FinancialData("ITC")
-    print(t.discounted_cash_flow_price_predictor(predict_no_yrs=0, plot=True))
+    print(t.caPM_predict(plot=True))

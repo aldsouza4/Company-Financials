@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="311c02d4-cdfe-464b-99db-b6fdbb123bc3" name="Default Changelist" comment="made plot function for stocks ( along with Nifty )">
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    <list default="true" id="311c02d4-cdfe-464b-99db-b6fdbb123bc3" name="Default Changelist" comment="fixed DCF function">
+      <change afterPath="$PROJECT_DIR$/.idea/csv-plugin.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/predict_2020.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_2020.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -36,7 +37,7 @@
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.predict_2020">
     <configuration name="SCRAP" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Company Financials" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -273,7 +274,28 @@
       <option name="project" value="LOCAL" />
       <updated>1611003106570</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="fixed DCF function">
+      <created>1615404341238</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1615404341238</updated>
+    </task>
+    <task id="LOCAL-00015" summary="fixed DCF function">
+      <created>1615404394171</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1615404394171</updated>
+    </task>
+    <task id="LOCAL-00016" summary="fixed DCF function">
+      <created>1615404429703</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1615404429703</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -301,6 +323,7 @@
     <MESSAGE value="with CAPM PREDICTOR and BETA Calculator" />
     <MESSAGE value="made plot function for plotting stock predictions" />
     <MESSAGE value="made plot function for stocks ( along with Nifty )" />
-    <option name="LAST_COMMIT_MESSAGE" value="made plot function for stocks ( along with Nifty )" />
+    <MESSAGE value="fixed DCF function" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed DCF function" />
   </component>
 </project>
