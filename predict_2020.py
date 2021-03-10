@@ -1084,5 +1084,5 @@ class FinancialData(object):
 
 
 if __name__ == '__main__':
-    t = FinancialData("tcs")
-    print(t.discounted_cash_flow_price_predictor(predict_no_yrs=1, plot=True))
+    t = FinancialData("ITC")
+    print(t.discounted_cash_flow_price_predictor(predict_no_yrs=0, plot=True))

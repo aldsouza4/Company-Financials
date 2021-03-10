@@ -926,7 +926,7 @@ class FinancialData(object):
         #       Applying Discount Factor
 
         discount_factor_list = []
-        for i in range(1, 5):
+        for i in range(1, num_yrs_in_rrr + 1):
             discount_factor_list.append((1 + discount_rate) ** i)
 
         present_value_future_cashflow = [x / y for x, y in zip(income_predict, discount_factor_list)]
@@ -937,7 +937,7 @@ class FinancialData(object):
         value_of_share = round(value_of_share, 3)
 
         return value_of_share
-        # print(value_of_share, " value per share ")
+
 
     def discounted_cash_flow_price_predictor(self, predict_no_yrs=1, plot=False, net_profit=True, operating_cash=False,
                                              free_cash=False, required_rate_of_return=0.12, perpetual_growth_rate=0.04):
@@ -973,7 +973,7 @@ class FinancialData(object):
             sns.set_style("darkgrid")
             plt.xlabel('Date', fontsize=14)
             plt.ylabel('Price', fontsize=14)
-            plt.title("{}".format(tick), fontsize=18)
+            plt.title("{} ML-DCF".format(tick), fontsize=18)
             plt.tight_layout()
             plt.plot_date(x=predict_data['Date'], y=predict_data['Adj Close'], linestyle='solid', marker=None)
             plt.plot_date(x=stock_price_data['Date'], y=stock_price_data['Adj Close'], linestyle='solid', marker=None)
@@ -1000,7 +1000,7 @@ class FinancialData(object):
         self.st_beta = cov_with_nifty / nifty_var
         return self.st_beta
 
-    def caPM_predict(self, predict_no_yrs=1, risk_free_return=0.04, plot=False):
+    def caPM_predict(self, predict_no_yrs=1, risk_free_return=0.05, plot=False):
         tick = "{}.NS".format(self.ticker)
         stock_price = round(wb.DataReader(tick, data_source='yahoo')['Adj Close'][-1], 2)
         predict_percentage = risk_free_return + self.beta() * 0.05
@@ -1022,7 +1022,7 @@ class FinancialData(object):
             sns.set_style("darkgrid")
             plt.xlabel('Date', fontsize=14)
             plt.ylabel('Price', fontsize=14)
-            plt.title("{}".format(tick), fontsize=18)
+            plt.title("{} CAPM Model".format(tick), fontsize=18)
             plt.tight_layout()
             plt.plot_date(x=predict_data['Date'], y=predict_data['Adj Close'], linestyle='solid', marker=None)
             plt.plot_date(x=stock_price_data['Date'], y=stock_price_data['Adj Close'], linestyle='solid', marker=None)
@@ -1082,8 +1082,6 @@ class FinancialData(object):
 
 
 if __name__ == '__main__':
-    t = FinancialData("TCS")
-    # # t.make_predictions(t.net_cash_flow(as_list=True), num_terms_pred=2, plot=True)
-    # t.discounted_cash_flow_price_predictor(predict_no_yrs=1, plot=True)
-    t.plot_stock()
-    #
+    t = FinancialData("itc")
+    # t.caPM_predict(predict_no_yrs=2, plot=True)
+    t.discounted_cash_flow_price_predictor(predict_no_yrs=2, plot=True)
